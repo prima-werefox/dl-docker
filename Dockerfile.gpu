@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu14.04
+FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu16.04
 
 MAINTAINER Sai Soundararaj <saip@outlook.com>
 
@@ -32,7 +32,6 @@ RUN apt-get update && apt-get install -y \
 		liblcms2-dev \
 		libopenblas-dev \
 		liblapack-dev \
-		libopenjpeg2 \
 		libpng12-dev \
 		libssl-dev \
 		libtiff5-dev \
@@ -80,6 +79,9 @@ RUN apt-get update && apt-get install -y \
 		ant \
 		default-jdk \
 		doxygen \
+		sudo \
+		openssh-server \
+		screen \
 		&& \
 	apt-get clean && \
 	apt-get autoremove && \
@@ -239,5 +241,18 @@ COPY run_jupyter.sh /root/
 # Expose Ports for TensorBoard (6006), Ipython (8888)
 EXPOSE 6006 8888
 
+# SSHD server
+RUN mkdir /var/run/sshd
+
+RUN echo 'root:root' |chpasswd
+
+RUN sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+
+EXPOSE 22
+
+RUN /usr/sbin/sshd -D
+
+# Activate
 WORKDIR "/root"
 CMD ["/bin/bash"]
